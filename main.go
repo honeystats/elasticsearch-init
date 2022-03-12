@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
@@ -66,6 +67,14 @@ func parseEsRes(resObj *esapi.Response, resErr error) ([]byte, error) {
 	return out, nil
 }
 
+func setupEsReq(body interface{}) (io.Reader, error) {
+	byteArr, err := json.Marshal(body)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error marshalling ES request: %v", err))
+	}
+	return bytes.NewReader(byteArr), nil
+}
+
 type IngestPipelineSetupReq struct {
 	Description string                    `json:"description"`
 	Processors  []IngestPipelineProcessor `json:"processors"`
@@ -79,7 +88,7 @@ type GeoIPProcessor struct {
 }
 
 func setupIngestPipelines(client *elasticsearch.Client) (string, error) {
-	bod := IngestPipelineSetupReq{
+	body := IngestPipelineSetupReq{
 		Description: "GeoIP ingest",
 		Processors: []IngestPipelineProcessor{
 			{
@@ -89,14 +98,15 @@ func setupIngestPipelines(client *elasticsearch.Client) (string, error) {
 			},
 		},
 	}
-	byteArr, err := json.Marshal(bod)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("Error marshalling ES request: %v", err))
-	}
-	body := bytes.NewReader(byteArr)
-	txt, err := parseEsRes(client.Ingest.PutPipeline("geoip", body))
+	bodyReader, err := setupEsReq(body)
 	if err != nil {
 		return "", err
 	}
+
+	txt, err := parseEsRes(client.Ingest.PutPipeline("geoip", bodyReader))
+	if err != nil {
+		return "", err
+	}
+
 	return string(txt), nil
 }
