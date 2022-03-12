@@ -27,7 +27,12 @@ func init() {
 
 func main() {
 	logrus.Info("Starting ES setup...")
-	_, err := elasticsearch.NewDefaultClient()
+	cfg := elasticsearch.Config{
+		Addresses: []string{
+			ELASTICSEARCH_URL,
+		},
+	}
+	_, err := elasticsearch.NewClient(cfg)
 	if err != nil {
 		logrus.WithError(err).Fatalln("Error setting up ES client")
 	}
