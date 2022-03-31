@@ -51,9 +51,12 @@ func main() {
 	}
 	logrus.Info("Elasticsearch client initialized successfully.")
 
-	res, err := setupIngestPipelines(client)
+	res, status, err := setupIngestPipelines(client)
 	if err != nil {
 		logrus.WithError(err).Fatalln("Error setting up ingest pipeline.")
 	}
-	logrus.WithField("result", res).Infoln("Succesfully set up ingest pipeline.")
+	logrus.WithFields(logrus.Fields{
+		"result":      res,
+		"status_code": status,
+	}).Infoln("Succesfully set up ingest pipeline.")
 }
