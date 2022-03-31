@@ -2,17 +2,21 @@ package main
 
 import (
 	"os"
+	"time"
 
 	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/sirupsen/logrus"
 )
 
-var ELASTICSEARCH_URL string
+var ELASTIC_USERNAME string
+var ELASTIC_PASSWORD string
+var KIBANA_SYSTEM_PASSWORD string
+var ELASTIC_URL string
 
 func requireEnv(key string) string {
 	val, isSet := os.LookupEnv(key)
 	if !isSet {
-		logrus.Fatalf("Missing environment variable: [$%s]\n", key)
+		logrus.Fatalf("Missing environment variable: $%s", key)
 	}
 	return val
 }
@@ -22,14 +26,23 @@ func init() {
 		FullTimestamp: true,
 		PadLevelText:  true,
 	})
-	ELASTICSEARCH_URL = requireEnv("ELASTICSEARCH_URL")
+	ELASTIC_USERNAME = requireEnv("ELASTIC_USERNAME")
+	ELASTIC_PASSWORD = requireEnv("ELASTIC_PASSWORD")
+	KIBANA_SYSTEM_PASSWORD = requireEnv("KIBANA_SYSTEM_PASSWORD")
+	ELASTIC_URL = requireEnv("ELASTICSEARCH_URL")
 }
 
 func main() {
 	logrus.Info("Starting ES setup...")
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			ELASTICSEARCH_URL,
+			ELASTIC_URL,
+		},
+		Username:   ELASTIC_USERNAME,
+		Password:   ELASTIC_PASSWORD,
+		MaxRetries: 1000,
+		RetryBackoff: func(attempt int) time.Duration {
+			return time.Second * 10
 		},
 	}
 	client, err := elasticsearch.NewClient(cfg)
