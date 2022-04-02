@@ -59,4 +59,22 @@ func main() {
 		"result":      res,
 		"status_code": status,
 	}).Infoln("Succesfully set up ingest pipeline.")
+
+	res, status, err = createIndices(client)
+	if err != nil {
+		logrus.WithError(err).Fatalln("Error creating indices.")
+	}
+	logrus.WithFields(logrus.Fields{
+		"result":      res,
+		"status_code": status,
+	}).Infoln("Succesfully set up indices.")
+
+	res, status, err = setupLocationMapping(client)
+	if err != nil {
+		logrus.WithError(err).Fatalln("Error setting up location mapping.")
+	}
+	logrus.WithFields(logrus.Fields{
+		"result":      res,
+		"status_code": status,
+	}).Infoln("Succesfully set up location mapping.")
 }
