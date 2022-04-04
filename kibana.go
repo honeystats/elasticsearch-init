@@ -36,10 +36,10 @@ func setupKibanaReq(body interface{}) (io.Reader, error) {
 	return bytes.NewReader(byteArr), nil
 }
 
-func makeKibanaRequest(client *http.Client, method string, path string, body interface{}) (string, int, error) {
+func makeKibanaRequest(client *http.Client, method string, path string, body interface{}) ([]byte, int, error) {
 	bodyReader, err := setupKibanaReq(body)
 	if err != nil {
-		return "", -1, err
+		return []byte{}, -1, err
 	}
 	reqPath := KIBANA_API_URL + path
 	req, err := http.NewRequest(method, reqPath, bodyReader)
@@ -47,8 +47,8 @@ func makeKibanaRequest(client *http.Client, method string, path string, body int
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("kbn-xsrf", "true")
 	if err != nil {
-		return "", -1, err
+		return []byte{}, -1, err
 	}
 	txt, status, err := parseKibanaRes(client.Do(req))
-	return string(txt), status, err
+	return txt, status, err
 }

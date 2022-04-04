@@ -87,18 +87,32 @@ func main() {
 		"status_code": status,
 	}).Infoln("Successfully set up location mapping.")
 
-	dataviews := append(HoneystatsIndices, "honeystats_*")
-	for _, index := range dataviews {
-		res, status, err = setupDataView(kibanaClient, index)
+	var dataviews []DataViewInfo = []DataViewInfo{
+		{
+			Id:    "honeystats-all",
+			Title: "honeystats_*",
+		},
+	}
+	for _, index := range HoneystatsIndices {
+		dataviews = append(dataviews, DataViewInfo{
+			Id:    index,
+			Title: index,
+		})
+	}
+
+	for _, dv := range dataviews {
+		res, status, err := setupDataView(kibanaClient, dv)
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{
-				"index":  index,
+				"id":     dv.Id,
+				"title":  dv.Title,
 				"status": status,
 				"res":    res,
 			}).Fatalln("Error setting up data view.")
 		}
 		logrus.WithFields(logrus.Fields{
-			"index":  index,
+			"id":     dv.Id,
+			"title":  dv.Title,
 			"status": status,
 			"res":    res,
 		}).Infoln("Successfully set up data view.")
