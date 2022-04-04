@@ -7,7 +7,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
-var HoneystatsIndices = []string{"ssh_data", "web_data"}
+var HoneystatsIndices = []string{"honeystats_ssh_data", "honeystats_web_data"}
 
 func createIndices(client *elasticsearch.Client) (string, int, error) {
 	for _, index := range HoneystatsIndices {
