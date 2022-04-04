@@ -60,7 +60,7 @@ func main() {
 	logrus.WithFields(logrus.Fields{
 		"result":      res,
 		"status_code": status,
-	}).Infoln("Succesfully set up ingest pipeline.")
+	}).Infoln("Successfully set up ingest pipeline.")
 
 	for _, index := range HoneystatsIndices {
 		res, status, err = createIndex(client, index)
@@ -71,7 +71,7 @@ func main() {
 			"index":       index,
 			"result":      res,
 			"status_code": status,
-		}).Infoln("Succesfully set up index.")
+		}).Infoln("Successfully set up index.")
 	}
 
 	res, status, err = setupLocationMapping(client)
@@ -81,5 +81,5 @@ func main() {
 	logrus.WithFields(logrus.Fields{
 		"result":      res,
 		"status_code": status,
-	}).Infoln("Succesfully set up location mapping.")
+	}).Infoln("Successfully set up location mapping.")
 }
