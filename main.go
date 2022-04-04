@@ -89,7 +89,7 @@ func main() {
 
 	var dataviews []DataViewInfo = []DataViewInfo{
 		{
-			Id:    "honeystats-all",
+			Id:    "honeystats_*",
 			Title: "honeystats_*",
 		},
 	}
