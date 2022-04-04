@@ -9,4 +9,5 @@ RUN go build -o /init
 FROM alpine:latest
 WORKDIR /
 COPY --from=builder /init /init
+COPY ./dashboards/*.ndjson /dashboards/
 CMD ["/init"]
