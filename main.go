@@ -32,6 +32,8 @@ func init() {
 	ELASTIC_URL = requireEnv("ELASTICSEARCH_URL")
 }
 
+var HoneystatsIndices = []string{"honeystats_ssh_data", "honeystats_web_data"}
+
 func main() {
 	logrus.Info("Starting ES setup...")
 	cfg := elasticsearch.Config{
@@ -60,14 +62,17 @@ func main() {
 		"status_code": status,
 	}).Infoln("Succesfully set up ingest pipeline.")
 
-	res, status, err = createIndices(client)
-	if err != nil {
-		logrus.WithError(err).Fatalln("Error creating indices.")
+	for _, index := range HoneystatsIndices {
+		res, status, err = createIndex(client, index)
+		if err != nil {
+			logrus.WithError(err).Fatalln("Error creating indices.")
+		}
+		logrus.WithFields(logrus.Fields{
+			"index":       index,
+			"result":      res,
+			"status_code": status,
+		}).Infoln("Succesfully set up index.")
 	}
-	logrus.WithFields(logrus.Fields{
-		"result":      res,
-		"status_code": status,
-	}).Infoln("Succesfully set up indices.")
 
 	res, status, err = setupLocationMapping(client)
 	if err != nil {
