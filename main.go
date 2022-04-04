@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"os"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 
 var ELASTIC_USERNAME string
 var ELASTIC_PASSWORD string
-var KIBANA_SYSTEM_PASSWORD string
 var ELASTIC_URL string
+var KIBANA_API_URL string
 
 func requireEnv(key string) string {
 	val, isSet := os.LookupEnv(key)
@@ -26,10 +27,11 @@ func init() {
 		FullTimestamp: true,
 		PadLevelText:  true,
 	})
+	logrus.SetLevel(logrus.DebugLevel)
 	ELASTIC_USERNAME = requireEnv("ELASTIC_USERNAME")
 	ELASTIC_PASSWORD = requireEnv("ELASTIC_PASSWORD")
-	KIBANA_SYSTEM_PASSWORD = requireEnv("KIBANA_SYSTEM_PASSWORD")
 	ELASTIC_URL = requireEnv("ELASTICSEARCH_URL")
+	KIBANA_API_URL = requireEnv("KIBANA_API_URL")
 }
 
 var HoneystatsIndices = []string{"honeystats_ssh_data", "honeystats_web_data"}
@@ -47,13 +49,15 @@ func main() {
 			return time.Second * 10
 		},
 	}
-	client, err := elasticsearch.NewClient(cfg)
+	elasticClient, err := elasticsearch.NewClient(cfg)
 	if err != nil {
 		logrus.WithError(err).Fatalln("Error setting up ES client")
 	}
 	logrus.Info("Elasticsearch client initialized successfully.")
 
-	res, status, err := setupIngestPipelines(client)
+	kibanaClient := new(http.Client)
+
+	res, status, err := setupIngestPipelines(elasticClient)
 	if err != nil {
 		logrus.WithError(err).Fatalln("Error setting up ingest pipeline.")
 	}
@@ -63,7 +67,7 @@ func main() {
 	}).Infoln("Successfully set up ingest pipeline.")
 
 	for _, index := range HoneystatsIndices {
-		res, status, err = createIndex(client, index)
+		res, status, err = createIndex(elasticClient, index)
 		if err != nil {
 			logrus.WithError(err).Fatalln("Error creating indices.")
 		}
@@ -74,7 +78,7 @@ func main() {
 		}).Infoln("Successfully set up index.")
 	}
 
-	res, status, err = setupLocationMapping(client)
+	res, status, err = setupLocationMapping(elasticClient)
 	if err != nil {
 		logrus.WithError(err).Fatalln("Error setting up location mapping.")
 	}
@@ -82,4 +86,21 @@ func main() {
 		"result":      res,
 		"status_code": status,
 	}).Infoln("Successfully set up location mapping.")
+
+	dataviews := append(HoneystatsIndices, "honeystats_*")
+	for _, index := range dataviews {
+		res, status, err = setupDataView(kibanaClient, index)
+		if err != nil {
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"index":  index,
+				"status": status,
+				"res":    res,
+			}).Fatalln("Error setting up data view.")
+		}
+		logrus.WithFields(logrus.Fields{
+			"index":  index,
+			"status": status,
+			"res":    res,
+		}).Infoln("Successfully set up data view.")
+	}
 }

@@ -6,16 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 )
 
 func parseEsRes(resObj *esapi.Response, resErr error) ([]byte, int, error) {
+	if resErr != nil {
+		return []byte{}, -1, resErr
+	}
 	defer resObj.Body.Close()
 
-	var out []byte
-	_, err := resObj.Body.Read(out)
+	out, err := ioutil.ReadAll(resObj.Body)
 	if err != nil {
 		return nil, -1, errors.New(fmt.Sprintf("Error reading ES response: %v", err))
 	}
