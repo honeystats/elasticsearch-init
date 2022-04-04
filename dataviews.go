@@ -14,10 +14,11 @@ type DataViewReq struct {
 }
 
 func dataViewExists(client *http.Client, view DataViewInfo) bool {
-	_, code, _ := makeKibanaRequest(
+	_, code, _ := makeKibanaRequestJSON(
 		client,
 		"GET",
 		"/data_views/data_view/"+view.Id,
+		ExtraHeaders{},
 		"",
 	)
 	if code == 200 {
@@ -30,10 +31,11 @@ func setupDataView(client *http.Client, dataview DataViewInfo) (string, int, err
 	if dataViewExists(client, dataview) {
 		return "Data view already exists.", 200, nil
 	}
-	res, code, err := makeKibanaRequest(
+	res, code, err := makeKibanaRequestJSON(
 		client,
 		"POST",
 		"/data_views/data_view",
+		ExtraHeaders{},
 		DataViewReq{
 			DataView: dataview,
 		},

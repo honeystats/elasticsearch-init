@@ -36,16 +36,25 @@ func setupKibanaReq(body interface{}) (io.Reader, error) {
 	return bytes.NewReader(byteArr), nil
 }
 
-func makeKibanaRequest(client *http.Client, method string, path string, body interface{}) ([]byte, int, error) {
+type ExtraHeaders map[string]string
+
+func makeKibanaRequestJSON(client *http.Client, method string, path string, extraHeaders ExtraHeaders, body interface{}) ([]byte, int, error) {
 	bodyReader, err := setupKibanaReq(body)
 	if err != nil {
 		return []byte{}, -1, err
 	}
+	return makeKibanaRequest(client, method, path, extraHeaders, bodyReader)
+}
+
+func makeKibanaRequest(client *http.Client, method string, path string, extraHeaders ExtraHeaders, bodyReader io.Reader) ([]byte, int, error) {
 	reqPath := KIBANA_API_URL + path
 	req, err := http.NewRequest(method, reqPath, bodyReader)
 	req.SetBasicAuth("elastic", ELASTIC_PASSWORD)
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("kbn-xsrf", "true")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("kbn-xsrf", "true")
+	for header, val := range extraHeaders {
+		req.Header.Set(header, val)
+	}
 	if err != nil {
 		return []byte{}, -1, err
 	}

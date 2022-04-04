@@ -117,4 +117,9 @@ func main() {
 			"res":    res,
 		}).Infoln("Successfully set up data view.")
 	}
+
+	err = importDashboardsFromDir(kibanaClient)
+	if err != nil {
+		logrus.WithError(err).Fatalln("Error importing dashboards")
+	}
 }
