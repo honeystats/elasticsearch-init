@@ -10,4 +10,5 @@ FROM alpine:latest
 WORKDIR /
 COPY --from=builder /init /init
 COPY ./dashboards/*.ndjson /dashboards/
-CMD ["/init"]
+COPY ./entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/bin/sh", "/entrypoint.sh" ]
